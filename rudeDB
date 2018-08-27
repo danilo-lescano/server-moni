@@ -1,1 +1,1 @@
-["login","criarConta","pesquisar","avaliarMonitor","registrarMonitoria","verMonitoria","enviarEmail","editarPerfil"]
+["user", "monitoria", "userNaoAutenticado"]

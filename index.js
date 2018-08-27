@@ -1,16 +1,26 @@
 var http = require('http');
 var url = require('url');
 var fs = require('fs');
+var crypto = require('crypto');
 require('./myModule');
 
 http.createServer(function (req, res) {
     var pedido = tryParseJSON(decodeURIComponent(url.parse(req.url, true)).substring(1));
+    var resposta;
     if(pedido === false || !pedido.tipo) requisicaoInvalida();
     else if(pedido.tipo === "avaliarMonitor"){
         
     }
     else if(pedido.tipo === "criarConta"){
-        
+        var index = rudeDB.userNaoAutenticado.length;
+        rudeDB.userNaoAutenticado[index] = pedido.user;
+        rudeDB.userNaoAutenticado[index].user.chave =  x;
+        for(var i = 0; i < rudeDB.userNaoAutenticado.length; i++){
+            if(pedido.email === rudeDB.user.email && pedido.senha === rudeDB.user.senha){
+                responder(res, resposta);
+                return;
+            }
+        }
     }
     else if(pedido.tipo === "editarPerfil"){
         
@@ -21,7 +31,8 @@ http.createServer(function (req, res) {
     else if(pedido.tipo === "login"){
         for(var i = 0; i < rudeDB.user.length; i++){
             if(pedido.email === rudeDB.user.email && pedido.senha === rudeDB.user.senha){
-
+                responder(res, resposta);
+                return;
             }
         }
     }
@@ -34,6 +45,8 @@ http.createServer(function (req, res) {
     else if(pedido.tipo === "verMonitoria"){
         
     }
+
+    responder(res, resposta);
 }).listen(8010);
 
 function tryParseJSON (jsonString){
@@ -56,7 +69,7 @@ fs.appendFile('rudeDB', '', function (err) {//JSON.stringify(["login", "criarCon
         var tabelas = JSON.parse(data);
         for (let index = 0; index < tabelas.length; index++) {
             let element = tabelas[index];
-            fs.appendFile("tabelas/"+element, '', function (err){
+            fs.appendFile("tabelas/._"+element, '', function (err){
                 if (err) throw err;
                 fs.readFile(element, '', function (err, data) {
                     rudeDB[element] = tryParseJSON(data);
