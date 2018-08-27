@@ -1,30 +1,40 @@
 var http = require('http');
 var url = require('url');
 var fs = require('fs');
-var rudeDB;
+require('./myModule');
 
 http.createServer(function (req, res) {
     var pedido = tryParseJSON(decodeURIComponent(url.parse(req.url, true)).substring(1));
     if(pedido === false || !pedido.tipo) requisicaoInvalida();
+    else if(pedido.tipo === "avaliarMonitor"){
+        
+    }
+    else if(pedido.tipo === "criarConta"){
+        
+    }
+    else if(pedido.tipo === "editarPerfil"){
+        
+    }
+    else if(pedido.tipo === "enviarEmail"){
+        
+    }
     else if(pedido.tipo === "login"){
-        for (let i = 0; i < rudeDB.length; i++) {
-            const element = array[i];
-            
+        for(var i = 0; i < rudeDB.user.length; i++){
+            if(pedido.email === rudeDB.user.email && pedido.senha === rudeDB.user.senha){
+
+            }
         }
     }
+    else if(pedido.tipo === "pesquisar"){
+        
+    }
+    else if(pedido.tipo === "registrarMonitoria"){
+        
+    }
+    else if(pedido.tipo === "verMonitoria"){
+        
+    }
 }).listen(8010);
-
-
-/* to do
-SERVIDOR: autenticacao do login
-SERVIDOR: devolver card monitores da disciplina
-SERVIDOR: clickcard devolver perfil monitor
-SERVIDOR: clickcard devolver avaliacao de monitoria (só pode avaliar uma vez por mês e se tiver feito monitoria)
-SERVIDOR: avaliar monitor
-SERVIDOR: registrar alunos que foram na monitoria
-SERVIDOR: ver registro de monitoria
-APP: botao voltar
-*/
 
 function tryParseJSON (jsonString){
     try {
@@ -40,14 +50,18 @@ function tryParseJSON (jsonString){
     catch (e) { }
     return false;
 }
-fs.appendFile('rudeDB', '', function (err) {
+fs.appendFile('rudeDB', '', function (err) {//JSON.stringify(["login", "criarConta", "pesquisar", "avaliarMonitor", "registrarMonitoria", "verMonitoria", "enviarEmail", "editarPerfil"])
     if (err) throw err;
-    else{
-        fs.readFile('rudeDB', '', function (err, data) {
-            for (let index = 0; index < array.length; index++) {
-                const element = array[index];
-                
-            }
-        });
-    }
+    fs.readFile('rudeDB', '', function (err, data) {
+        var tabelas = JSON.parse(data);
+        for (let index = 0; index < tabelas.length; index++) {
+            let element = tabelas[index];
+            fs.appendFile("tabelas/"+element, '', function (err){
+                if (err) throw err;
+                fs.readFile(element, '', function (err, data) {
+                    rudeDB[element] = tryParseJSON(data);
+                });
+            });
+        }
+    });
 });
