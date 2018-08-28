@@ -6,7 +6,7 @@ require('./myModule');
 http.createServer(function (req, res) {
     var pedido = tryParseJSON(decodeURIComponent(url.parse(req.url, true).path).substring(1));
     var resposta = {};
-    if(pedido === false || !pedido.tipo){ res.end(); return;}
+    if(!pedido || !pedido.tipo){ res.end(); return;}
     else if(pedido.tipo === "avaliarMonitor"){
         resposta.ok = false;
         if(!pedido.user || !pedido.user.pontosDominio || !pedido.user.pontosEmpatia ||!pedido.user.pontosPontualidade){
@@ -44,10 +44,24 @@ http.createServer(function (req, res) {
         return;
     }
     else if(pedido.tipo === "editarPerfil"){
-        
-    }
-    else if(pedido.tipo === "enviarEmail"){
-        
+        resposta.ok = false;
+        if(!pedido.user){
+            responder(res, resposta);
+            return;
+        }
+        for(var i = 0; i < rudeDB.user.length; i++){
+            if(pedido.user.id === rudeDB.user[i].id){
+                var id = rudeDB.user[i].id;
+                var senha = pedido.senha || rudeDB.user[i].senha;
+                rudeDB.user[i] = pedido.user;
+                rudeDB.user[i].id = id;
+                rudeDB.user[i].senha = senha;
+                resposta.ok = true;
+                reposta.user = rudeDB.user[i];
+            }
+        }
+        responder(res, resposta);
+        return;
     }
     else if(pedido.tipo === "login"){
         resposta.existe = false;
@@ -65,15 +79,37 @@ http.createServer(function (req, res) {
         }
     }
     else if(pedido.tipo === "pesquisar"){
-        
+        resposta = [];
+        if(!pedido.disciplina){
+            responder(res, resposta);
+            return;
+        }
+        for(var i = 0; i < rudeDB.user.length; i++){
+            if(pedido.disciplina === rudeDB.user[i].disciplina){
+                var index = resposta.length;
+                resposta[index] = rudeDB.user[i];
+                resposta[index].senha = "";
+            }
+        }
+        responder(res, resposta);
+        return;
     }
     else if(pedido.tipo === "registrarMonitoria"){
-        
+        var index = rudeDB.monitoria.length;
+        rudeDB.monitoria[index] = {};
+        rudeDB.monitoria[index] = pedido.monitoria;
+        rudeDB.monitoria[index].id = index;
+
+        resposta.ok = true;
+        responder(res, resposta);
+        return;
     }
     else if(pedido.tipo === "verMonitoria"){
         
     }
+    else if(pedido.tipo === "enviarEmail"){
 
+    }
     responder(res, resposta);
 }).listen(8010);
 
