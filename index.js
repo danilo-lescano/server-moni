@@ -105,7 +105,19 @@ http.createServer(function (req, res) {
         return;
     }
     else if(pedido.tipo === "verMonitoria"){
-        
+        resposta = [];
+        if(!pedido.id){
+            responder(res, resposta);
+            return;
+        }
+        for(var i = 0; i < rudeDB.monitoria.length; i++){
+            if(pedido.id === rudeDB.monitoria[i].monitorid){
+                var index = resposta.length;
+                resposta[index] = rudeDB.monitoria[i];
+            }
+        }
+        responder(res, resposta);
+        return;
     }
     else if(pedido.tipo === "enviarEmail"){
 
