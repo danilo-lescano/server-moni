@@ -1,7 +1,6 @@
 var http = require('http');
 var url = require('url');
 var fs = require('fs');
-var crypto = require('crypto');
 require('./myModule');
 
 http.createServer(function (req, res) {
@@ -9,16 +8,38 @@ http.createServer(function (req, res) {
     var resposta = {};
     if(pedido === false || !pedido.tipo){ res.end(); return;}
     else if(pedido.tipo === "avaliarMonitor"){
-        
+        resposta.ok = false;
+        if(!pedido.user || !pedido.user.pontosDominio || !pedido.user.pontosEmpatia ||!pedido.user.pontosPontualidade){
+            responder(res, resposta);
+            return;
+        }
+        for(var i = 0; i < rudeDB.user.length; i++){
+            if(pedido.user.id === rudeDB.user[i].id){
+                rudeDB.user[i].pontosDominio += pedido.user.pontosDominio;
+                rudeDB.user[i].pontosEmpatia += pedido.user.pontosEmpatia;
+                rudeDB.user[i].pontosPontualidade += pedido.user.pontosPontualidade;
+                resposta.ok = true;
+            }
+        }
+        responder(res, resposta);
+        return;
     }
     else if(pedido.tipo === "criarConta"){
-        console.log(rudeDB.userNaoAutenticado.length);
-        var index = rudeDB.userNaoAutenticado.length;
-        rudeDB.user[index] = rudeDB.userNaoAutenticado[index] = {};
-        rudeDB.user[index] = pedido.user;
-        rudeDB.userNaoAutenticado[index].user = pedido.user;
-        rudeDB.userNaoAutenticado[index].chave =  pedido.chave;
+        var criar = true;
         resposta.ok = true;
+        for(var i = 0; i < rudeDB.user.length; i++){
+            if(pedido.user.email === rudeDB.user[i].email && pedido.user.senha === rudeDB.user[i].senha){
+                criar = false;
+                resposta.ok = false;
+            }            
+        }
+        if(criar){
+            var index = rudeDB.user.length;
+            rudeDB.user[index] = {};
+            rudeDB.user[index] = pedido.user;
+            rudeDB.user[index].id = index;
+        }
+
         responder(res, resposta);
         return;
     }
@@ -29,11 +50,12 @@ http.createServer(function (req, res) {
         
     }
     else if(pedido.tipo === "login"){
-        console.log("login");
-        console.log(rudeDB.user);
-        console.log(pedido);
+        resposta.existe = false;
+        if(!pedido.user){
+            responder(res, resposta);
+            return;
+        }
         for(var i = 0; i < rudeDB.user.length; i++){
-        console.log(pedido.email + " " + rudeDB.user[i].email + " " + pedido.senha + " " + rudeDB.user[i].senha);
             if(pedido.user.email === rudeDB.user[i].email && pedido.user.senha === rudeDB.user[i].senha){
                 resposta.existe = true;
                 resposta.user = rudeDB.user[i];
@@ -55,44 +77,27 @@ http.createServer(function (req, res) {
     responder(res, resposta);
 }).listen(8010);
 
-function tryParseJSON (jsonString){
-    try {
-        var o = JSON.parse(jsonString);
-        // Handle non-exception-throwing cases:
-        // Neither JSON.parse(false) or JSON.parse(1234) throw errors, hence the type-checking,
-        // but... JSON.parse(null) returns null, and typeof null === "object", 
-        // so we must check for that, too. Thankfully, null is falsey, so this suffices:
-        if (o && typeof o === "object") {
-            return o;
-        }
-    }
-    catch (e) { }
-    return false;
-}
-fs.appendFile('rudeDB', '', function (err) {//JSON.stringify(["login", "criarConta", "pesquisar", "avaliarMonitor", "registrarMonitoria", "verMonitoria", "enviarEmail", "editarPerfil"])
-    if (err) throw err;
-    fs.readFile('rudeDB', '', function (err, data) {
-        tabelas = JSON.parse(data);
+fs.readFile('rudeDB', '', function (err, data) {
+    tabelas = JSON.parse(data);
 
-        for (let index = 0; index < tabelas.length; index++) {
-            let element = tabelas[index];
-            fs.appendFile("tabelas/._"+element, '', function (err){
+    for (let index = 0; index < tabelas.length; index++) {
+        let element = tabelas[index];
+        fs.appendFile("tabelas/._"+element, '', function (err){
+            if (err) throw err;
+            fs.readFile("tabelas/._"+element, '', function (err, data) {
                 if (err) throw err;
-                fs.readFile("tabelas/._"+element, '', function (err, data) {
-                    if (err) throw err;
-                    let tabela = tryParseJSON(data);
-                    if(tabela)
-                        rudeDB[element] = tabela;
-                    else{
-                        rudeDB[element] = [];
-                        fs.writeFile("tabelas/._"+element, '[]', function (err, data) {
-                            if (err) throw err;
-                        });
-                    }
-                });
+                let tabela = tryParseJSON(data);
+                if(tabela)
+                    rudeDB[element] = tabela;
+                else{
+                    rudeDB[element] = [];
+                    fs.writeFile("tabelas/._"+element, '[]', function (err, data) {
+                        if (err) throw err;
+                    });
+                }
             });
-        }
-    });
+        });
+    }
 });
 function start(){
     var tempo = 60000;
@@ -105,3 +110,10 @@ function start(){
         }
     },tempo);
 }start();
+
+
+//criarConta
+//http://localhost:8010/%7B%22tipo%22%3A%22criarConta%22%2C%22user%22%3A%7B%22email%22%3A%22tha%40tha.tha%22%2C%22senha%22%3A%22tha%22%7D%7D
+
+//login
+//http://localhost:8010/%7B%22tipo%22%3A%22login%22%2C%22user%22%3A%7B%22email%22%3A%22tha%40tha.tha%22%2C%22senha%22%3A%22tha%22%7D%7D
