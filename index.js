@@ -7,7 +7,7 @@ http.createServer(function (req, res) {
     var pedido = tryParseJSON(decodeURIComponent(url.parse(req.url, true).path).substring(1));
     var resposta = {};
     if(!pedido || !pedido.tipo){ res.end(); return;}
-    else if(pedido.tipo === "avaliarMonitor"){
+    else if(pedido.tipo === "avaliarMonitor"){ //procura o monitor com o pedido.user.id e soma os pontos
         resposta.ok = false;
         if(!pedido.user || !pedido.user.pontosDominio || !pedido.user.pontosEmpatia ||!pedido.user.pontosPontualidade){
             responder(res, resposta);
@@ -24,11 +24,11 @@ http.createServer(function (req, res) {
         responder(res, resposta);
         return;
     }
-    else if(pedido.tipo === "criarConta"){
+    else if(pedido.tipo === "criarConta"){//procura para ver se ja n existe uma conta igual e cria se n existir
         var criar = true;
         resposta.ok = true;
         for(var i = 0; i < rudeDB.user.length; i++){
-            if(pedido.user.email === rudeDB.user[i].email && pedido.user.senha === rudeDB.user[i].senha){
+            if(pedido.user.email === rudeDB.user[i].email){
                 criar = false;
                 resposta.ok = false;
             }            
@@ -43,7 +43,7 @@ http.createServer(function (req, res) {
         responder(res, resposta);
         return;
     }
-    else if(pedido.tipo === "editarPerfil"){
+    else if(pedido.tipo === "editarPerfil"){//edita o perfil das informações alteradas
         resposta.ok = false;
         if(!pedido.user){
             responder(res, resposta);
@@ -51,11 +51,17 @@ http.createServer(function (req, res) {
         }
         for(var i = 0; i < rudeDB.user.length; i++){
             if(pedido.user.id === rudeDB.user[i].id){
-                var id = rudeDB.user[i].id;
-                var senha = pedido.senha || rudeDB.user[i].senha;
-                rudeDB.user[i] = pedido.user;
-                rudeDB.user[i].id = id;
-                rudeDB.user[i].senha = senha;
+                rudeDB.user[i].senha = pedido.senha || rudeDB.user[i].senha;
+                rudeDB.user[i].imagemId = pedido.imagemId || rudeDB.user[i].imagemId;
+                rudeDB.user[i].nomeCompleto = pedido.nomeCompleto || rudeDB.user[i].nomeCompleto;
+                rudeDB.user[i].email = pedido.email || rudeDB.user[i].email;
+                rudeDB.user[i].curso = pedido.curso || rudeDB.user[i].curso;
+                rudeDB.user[i].semestre = pedido.semestre || rudeDB.user[i].semestre;
+                rudeDB.user[i].monitor = pedido.monitor || rudeDB.user[i].monitor;
+                rudeDB.user[i].disciplina = pedido.disciplina || rudeDB.user[i].disciplina;
+                rudeDB.user[i].diaSemana = pedido.diaSemana || rudeDB.user[i].diaSemana;
+                rudeDB.user[i].horario = pedido.horario || rudeDB.user[i].horario;
+
                 resposta.ok = true;
                 reposta.user = rudeDB.user[i];
             }
@@ -63,7 +69,7 @@ http.createServer(function (req, res) {
         responder(res, resposta);
         return;
     }
-    else if(pedido.tipo === "login"){
+    else if(pedido.tipo === "login"){//verifica se senha e login existem
         resposta.existe = false;
         if(!pedido.user){
             responder(res, resposta);
@@ -73,12 +79,13 @@ http.createServer(function (req, res) {
             if(pedido.user.email === rudeDB.user[i].email && pedido.user.senha === rudeDB.user[i].senha){
                 resposta.existe = true;
                 resposta.user = rudeDB.user[i];
+                resposta.user.senha = "";
                 responder(res, resposta);
                 return;
             }
         }
     }
-    else if(pedido.tipo === "pesquisar"){
+    else if(pedido.tipo === "pesquisar"){//devolve array com os monitores da disciplina X
         resposta = [];
         if(!pedido.disciplina){
             responder(res, resposta);
