@@ -1,36 +1,35 @@
 var http = require('http');
 var url = require('url');
 var fs = require('fs');
-require('./myModule');
 var nodemailer = require('nodemailer');
+require('./myModule');
 
 var transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: 'moni.ifms@gmail.com',
-    pass: 'nq3i4fsx@123'
-  }
+    service: 'gmail',
+    auth: {
+        user: 'moni.ifms@gmail.com',
+        pass: 'nq3i4fsx@123'
+    }
 });
-
 var mailOptions = {
-  from: 'moni.ifms@gmail.com',
-  to: 'thaislescano@hotmail.com, nqi34fsx@hotmail.com',
-  subject: 'Sending Email using Node.js',
-  text: 'That was easy!'
+    from: 'moni.ifms@gmail.com',
+    to: 'thaislescano@hotmail.com, nq3i4fsx@hotmail.com',
+    subject: 'Sending Email using Node.js',
+    text: 'That was easy!'
 };
-
 transporter.sendMail(mailOptions, function(error, info){
-  if (error) {
-    console.log(error);
-  } else {
-    console.log('Email sent: ' + info.response);
-  }
+    if (error) {
+        console.log(error);
+    } else {
+        console.log('Email sent: ' + info.response);
+    }
 });
 http.createServer(function (req, res) {
     var pedido = tryParseJSON(decodeURIComponent(url.parse(req.url, true).path).substring(1));
     var resposta = {};
     if(!pedido || !pedido.tipo){ res.end(); return;}
     else if(pedido.tipo === "avaliarMonitor"){ //procura o monitor com o pedido.user.id e soma os pontos
+        console.log(pedido);
         resposta.ok = false;
         if(!pedido.user || !pedido.user.pontosDominio || !pedido.user.pontosEmpatia ||!pedido.user.pontosPontualidade){
             responder(res, resposta);
@@ -48,8 +47,14 @@ http.createServer(function (req, res) {
         return;
     }
     else if(pedido.tipo === "criarConta"){//procura para ver se ja n existe uma conta igual e cria se n existir
+        console.log(pedido);
         var criar = true;
         resposta.ok = true;
+        if(!pedido.user || !pedido.user.email){
+            resposta.ok = false;
+            responder(res, resposta);
+            return;
+        }
         for(var i = 0; i < rudeDB.user.length; i++){
             if(pedido.user.email === rudeDB.user[i].email){
                 criar = false;
@@ -67,6 +72,7 @@ http.createServer(function (req, res) {
         return;
     }
     else if(pedido.tipo === "editarPerfil"){//edita o perfil das informações alteradas
+        console.log(pedido);
         resposta.ok = false;
         if(!pedido.user){
             responder(res, resposta);
@@ -93,6 +99,7 @@ http.createServer(function (req, res) {
         return;
     }
     else if(pedido.tipo === "login"){//verifica se senha e login existem
+        console.log(pedido);
         resposta.existe = false;
         if(!pedido.user){
             responder(res, resposta);
@@ -109,13 +116,14 @@ http.createServer(function (req, res) {
         }
     }
     else if(pedido.tipo === "pesquisar"){//devolve array com os monitores da disciplina X
+        console.log(pedido);
         resposta = [];
-        if(!pedido.disciplina){
+        if(!pedido.disciplina && pedido.semestre){
             responder(res, resposta);
             return;
         }
         for(var i = 0; i < rudeDB.user.length; i++){
-            if(pedido.disciplina === rudeDB.user[i].disciplina){
+            if(pedido.disciplina === rudeDB.user[i].disciplina && rudeDB.user[i].monitor && rudeDB.user[i].semestre > pedido.semestre){
                 var index = resposta.length;
                 resposta[index] = rudeDB.user[i];
                 resposta[index].senha = "";
@@ -125,6 +133,7 @@ http.createServer(function (req, res) {
         return;
     }
     else if(pedido.tipo === "registrarMonitoria"){
+        console.log(pedido);
         var index = rudeDB.monitoria.length;
         rudeDB.monitoria[index] = {};
         rudeDB.monitoria[index] = pedido.monitoria;
@@ -135,6 +144,7 @@ http.createServer(function (req, res) {
         return;
     }
     else if(pedido.tipo === "verMonitoria"){
+        console.log(pedido);
         resposta = [];
         if(!pedido.id){
             responder(res, resposta);
