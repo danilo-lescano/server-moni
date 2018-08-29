@@ -2,7 +2,30 @@ var http = require('http');
 var url = require('url');
 var fs = require('fs');
 require('./myModule');
+var nodemailer = require('nodemailer');
 
+var transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: 'moni.ifms@gmail.com',
+    pass: 'nq3i4fsx@123'
+  }
+});
+
+var mailOptions = {
+  from: 'moni.ifms@gmail.com',
+  to: 'thaislescano@hotmail.com, nqi34fsx@hotmail.com',
+  subject: 'Sending Email using Node.js',
+  text: 'That was easy!'
+};
+
+transporter.sendMail(mailOptions, function(error, info){
+  if (error) {
+    console.log(error);
+  } else {
+    console.log('Email sent: ' + info.response);
+  }
+});
 http.createServer(function (req, res) {
     var pedido = tryParseJSON(decodeURIComponent(url.parse(req.url, true).path).substring(1));
     var resposta = {};
@@ -172,3 +195,7 @@ function start(){
 
 //login
 //http://localhost:8010/%7B%22tipo%22%3A%22login%22%2C%22user%22%3A%7B%22email%22%3A%22tha%40tha.tha%22%2C%22senha%22%3A%22tha%22%7D%7D
+
+
+
+
