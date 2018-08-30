@@ -19,7 +19,10 @@ module.exports = tryParseJSON = function (jsonString){
     }
     catch (e) { }
     return false;
-}
+};
+module.exports = sendMail = function (nodemailer, mailContent){
+
+};
 
 
 

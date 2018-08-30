@@ -50,22 +50,34 @@ http.createServer(function (req, res) {
         console.log(pedido);
         var criar = true;
         resposta.ok = true;
-        if(!pedido.user || !pedido.user.email){
+        if(!pedido.user || !pedido.user.email){//validar algumas variaveis recebidas
             resposta.ok = false;
             responder(res, resposta);
             return;
         }
-        for(var i = 0; i < rudeDB.user.length; i++){
+        for(var i = 0; i < rudeDB.user.length; i++){//verificar se já existem alguem com o msm email
             if(pedido.user.email === rudeDB.user[i].email){
                 criar = false;
                 resposta.ok = false;
-            }            
+            }
         }
         if(criar){
             var index = rudeDB.user.length;
             rudeDB.user[index] = {};
             rudeDB.user[index] = pedido.user;
             rudeDB.user[index].id = index;
+            // vai enviar email de confirmação?
+            /*****SE-SIM*****
+            var index = rudeDB.user.length;
+            rudeDB.userNaoAutenticado[index] = {};
+            rudeDB.userNaoAutenticado[index] = pedido.user;
+            rudeDB.userNaoAutenticado[index].chave = GENERATE-RANDOM-KEY();
+            var conteudo;
+            //preparar email aqui
+            //preparar email aqui
+            //preparar email aqui
+            sendMail(nodemailer, conteudo);
+            */
         }
 
         responder(res, resposta);
