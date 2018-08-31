@@ -20,8 +20,38 @@ module.exports = tryParseJSON = function (jsonString){
     catch (e) { }
     return false;
 };
+module.exports = checker = function (data){ //checkar as variaveis que recebe do cliente
+    for (var i = 0; i < data.length; i = i + 2) {
+        if( typeof data[i] !== undefined &&
+            (typeof data[i] === typeof data[i+1] || typeof data[i] === typeof (isNaN(data[i+1]) ? " ": 1) ) )
+            continue;
+        return true; //algo deu errado
+    }
+    return false; //tudo certo
+};
+module.exports = gerarChave = function (crypto){
+    var key = '#';
+    for(var i = 0; i < 10; i++)
+        key+=Math.floor(Math.random()*16777215).toString(16);
+    return key;
+};
 module.exports = sendMail = function (nodemailer, mailContent){
+    var transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+            user: 'moni.ifms@gmail.com',
+            pass: 'nq3i4fsx@123'
+        }
+    });
+    mailContent.from = 'moni.ifms@gmail.com';
 
+    transporter.sendMail(mailContent, function(error, info){
+        if (error) {
+            console.log('ERROR EMAIL');
+        } else {
+            console.log('Email enviado');
+        }
+    });
 };
 
 

@@ -2,63 +2,65 @@ var http = require('http');
 var url = require('url');
 var fs = require('fs');
 var nodemailer = require('nodemailer');
+var crypto = require('crypto');
+
 require('./myModule');
 
-var transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: 'moni.ifms@gmail.com',
-        pass: 'nq3i4fsx@123'
-    }
-});
-var mailOptions = {
-    from: 'moni.ifms@gmail.com',
-    to: 'thaislescano@hotmail.com, nq3i4fsx@hotmail.com',
-    subject: 'Sending Email using Node.js',
-    text: 'That was easy!'
-};
-transporter.sendMail(mailOptions, function(error, info){
-    if (error) {
-        console.log(error);
-    } else {
-        console.log('Email sent: ' + info.response);
-    }
-});
 http.createServer(function (req, res) {
     var pedido = tryParseJSON(decodeURIComponent(url.parse(req.url, true).path).substring(1));
     var resposta = {};
+    console.log("\n---------");
+
     if(!pedido || !pedido.tipo){ res.end(); return;}
     else if(pedido.tipo === "avaliarMonitor"){ //procura o monitor com o pedido.user.id e soma os pontos
-        console.log(pedido);
         resposta.ok = false;
-        if(!pedido.user || !pedido.user.pontosDominio || !pedido.user.pontosEmpatia ||!pedido.user.pontosPontualidade){
+
+        if(checker([
+            pedido.user, {},
+            pedido.user.id, 1,
+            pedido.user.pontosDominio, 1,
+            pedido.user.pontosEmpatia, 1,
+            pedido.user.pontosPontualidade, 1]))
+        {
+            console.log("problema\n"+pedido);
             responder(res, resposta);
-            return;
+            return;            
         }
+
         for(var i = 0; i < rudeDB.user.length; i++){
-            if(pedido.user.id === rudeDB.user[i].id){
-                rudeDB.user[i].pontosDominio += pedido.user.pontosDominio;
-                rudeDB.user[i].pontosEmpatia += pedido.user.pontosEmpatia;
-                rudeDB.user[i].pontosPontualidade += pedido.user.pontosPontualidade;
+            if(pedido.user.id == rudeDB.user[i].id){
+                rudeDB.user[i].pontosDominio += parseInt(pedido.user.pontosDominio);
+                rudeDB.user[i].pontosEmpatia += parseInt(pedido.user.pontosEmpatia);
+                rudeDB.user[i].pontosPontualidade += parseInt(pedido.user.pontosPontualidade);
                 resposta.ok = true;
             }
         }
-        responder(res, resposta);
-        return;
     }
     else if(pedido.tipo === "criarConta"){//procura para ver se ja n existe uma conta igual e cria se n existir
-        console.log(pedido);
         var criar = true;
         resposta.ok = true;
-        if(!pedido.user || !pedido.user.email){//validar algumas variaveis recebidas
+
+        if(checker([//validar algumas variaveis recebidas
+            pedido.user, {},
+            pedido.user.imagemId, 1,
+            pedido.user.nomeCompleto,
+            pedido.user.email, " ",
+            pedido.user.senha, " ",
+            pedido.user.curso, " ",
+            pedido.user.semestre, 1,
+            pedido.user.monitor, true,]))
+        {
             resposta.ok = false;
+            console.log("problema\n"+pedido);
             responder(res, resposta);
-            return;
+            return;            
         }
+
         for(var i = 0; i < rudeDB.user.length; i++){//verificar se já existem alguem com o msm email
             if(pedido.user.email === rudeDB.user[i].email){
                 criar = false;
                 resposta.ok = false;
+                break;
             }
         }
         if(criar){
@@ -67,25 +69,36 @@ http.createServer(function (req, res) {
             rudeDB.user[index] = pedido.user;
             rudeDB.user[index].id = index;
             // vai enviar email de confirmação?
-            /*****SE-SIM*****
+            /*****-SE-SIM-***** apagar o codigo de cima e deixar esse
             var index = rudeDB.user.length;
             rudeDB.userNaoAutenticado[index] = {};
-            rudeDB.userNaoAutenticado[index] = pedido.user;
-            rudeDB.userNaoAutenticado[index].chave = GENERATE-RANDOM-KEY();
-            var conteudo;
-            //preparar email aqui
-            //preparar email aqui
-            //preparar email aqui
+            rudeDB.userNaoAutenticado[index].user = pedido.user;
+            rudeDB.userNaoAutenticado[index].chave = gerarChave(crypto);
+            var conteudo = {
+                to: pedido.user.email,
+                subject: 'MONI: confimarção de email!',
+                text: 'montar url com a chave aqui' //pode ser html no lugar de text dai só colocar um '<h1>hello world</h1> da vida
+            };
             sendMail(nodemailer, conteudo);
             */
         }
-
-        responder(res, resposta);
-        return;
     }
     else if(pedido.tipo === "editarPerfil"){//edita o perfil das informações alteradas
-        console.log(pedido);
         resposta.ok = false;
+        if(checker([//validar algumas variaveis recebidas
+            pedido.user, {},
+            pedido.user.nomeCompleto,
+            pedido.user.email, " ",
+            pedido.user.senha, " ",
+            pedido.user.curso, " ",
+            pedido.user.semestre, 1,
+            pedido.user.monitor, true,]))
+        {
+            resposta.ok = false;
+            console.log("problema\n"+pedido);
+            responder(res, resposta);
+            return;            
+        }
         if(!pedido.user){
             responder(res, resposta);
             return;
@@ -174,6 +187,8 @@ http.createServer(function (req, res) {
     else if(pedido.tipo === "enviarEmail"){
 
     }
+    console.log(pedido);
+    console.log(resposta);
     responder(res, resposta);
 }).listen(8010);
 
