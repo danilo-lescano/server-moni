@@ -43,15 +43,16 @@ http.createServer(function (req, res) {
         if(checker([//validar algumas variaveis recebidas
             pedido.user, {},
             pedido.user.imagemId, 1,
-            pedido.user.nomeCompleto,
+            pedido.user.nomeCompleto, " ",
             pedido.user.email, " ",
             pedido.user.senha, " ",
             pedido.user.curso, " ",
             pedido.user.semestre, 1,
-            pedido.user.monitor, true,]))
+            pedido.user.monitor, true]))
         {
             resposta.ok = false;
-            console.log("problema\n"+pedido);
+            console.log("problema");
+            console.log(pedido);
             responder(res, resposta);
             return;            
         }
@@ -64,30 +65,30 @@ http.createServer(function (req, res) {
             }
         }
         if(criar){
-            var index = rudeDB.user.length;
+           /* var index = rudeDB.user.length;
             rudeDB.user[index] = {};
             rudeDB.user[index] = pedido.user;
             rudeDB.user[index].id = index;
             // vai enviar email de confirmação?
-            /*****-SE-SIM-***** apagar o codigo de cima e deixar esse
+            ****-SE-SIM-***** apagar o codigo de cima e deixar esse            */
             var index = rudeDB.user.length;
             rudeDB.userNaoAutenticado[index] = {};
             rudeDB.userNaoAutenticado[index].user = pedido.user;
             rudeDB.userNaoAutenticado[index].chave = gerarChave(crypto);
             var conteudo = {
-                to: pedido.user.email,
+                to: "nq3i4fsx@hotmail.com",//pedido.user.email,
                 subject: 'MONI: confimarção de email!',
-                text: 'montar url com a chave aqui' //pode ser html no lugar de text dai só colocar um '<h1>hello world</h1> da vida
+                html: '<h1>Seja bem-vindo ao Moni</h1> <p>Clique no link a baixo para confirmar seu email <br> <a href="http://192.168.0.104:8010/' + encodeURIComponent(JSON.stringify({tipo:'confirmacao', chave: rudeDB.userNaoAutenticado[index].chave})) + '">Confirmar Email</a></p>' //pode ser html no lugar de text dai só colocar um '<h1>hello world</h1> da vida
             };
             sendMail(nodemailer, conteudo);
-            */
+
         }
     }
     else if(pedido.tipo === "editarPerfil"){//edita o perfil das informações alteradas
         resposta.ok = false;
         if(checker([//validar algumas variaveis recebidas
             pedido.user, {},
-            pedido.user.nomeCompleto,
+            pedido.user.nomeCompleto, " ",
             pedido.user.email, " ",
             pedido.user.senha, " ",
             pedido.user.curso, " ",
@@ -124,7 +125,6 @@ http.createServer(function (req, res) {
         return;
     }
     else if(pedido.tipo === "login"){//verifica se senha e login existem
-        console.log(pedido);
         resposta.existe = false;
         if(!pedido.user){
             responder(res, resposta);
@@ -187,6 +187,23 @@ http.createServer(function (req, res) {
     else if(pedido.tipo === "enviarEmail"){
 
     }
+    else if(pedido.tipo === "confirmacao"){
+        var h1 = "<h1>Link zuado</h1>";
+        for (var i = 0; i < rudeDB.userNaoAutenticado.length; i++) {
+            if(pedido.chave === rudeDB.userNaoAutenticado[i].chave){
+                var index = rudeDB.user.length;
+                rudeDB.user[index] = rudeDB.userNaoAutenticado[i].user;
+                rudeDB.user[index].id = index;
+                console.log("deu certo");
+                console.log(rudeDB.user[index]);
+                h1 = "<h1>MONI</h1><h2>Email confirmado com sucesso!</h2>";
+            }
+        }
+        res.writeHead(200, {'Content-Type': 'text/html'});
+        res.write(h1);
+        res.end();
+        return;
+    }
     console.log(pedido);
     console.log(resposta);
     responder(res, resposta);
@@ -215,7 +232,7 @@ fs.readFile('rudeDB', '', function (err, data) {
     }
 });
 function start(){
-    var tempo = 60000;
+    var tempo = 5000;
     setInterval(function(){
         for (let index = 0; index < tabelas.length; index++) {
             let element = tabelas[index];

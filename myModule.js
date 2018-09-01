@@ -25,13 +25,14 @@ module.exports = checker = function (data){ //checkar as variaveis que recebe do
         if( typeof data[i] !== undefined &&
             (typeof data[i] === typeof data[i+1] || typeof data[i] === typeof (isNaN(data[i+1]) ? " ": 1) ) )
             continue;
+        console.log(i);
         return true; //algo deu errado
     }
     return false; //tudo certo
 };
 module.exports = gerarChave = function (crypto){
-    var key = '#';
-    for(var i = 0; i < 10; i++)
+    var key = '';
+    for(var i = 0; i < 5; i++)
         key+=Math.floor(Math.random()*16777215).toString(16);
     return key;
 };
@@ -43,7 +44,7 @@ module.exports = sendMail = function (nodemailer, mailContent){
             pass: 'nq3i4fsx@123'
         }
     });
-    mailContent.from = 'moni.ifms@gmail.com';
+    mailContent.from = 'MONI APP <moni.ifms@gmail.com>';
 
     transporter.sendMail(mailContent, function(error, info){
         if (error) {
