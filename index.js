@@ -14,7 +14,8 @@ http.createServer(function (req, res) {
     if(!pedido || !pedido.tipo){ res.end(); return;}
     else if(pedido.tipo === "avaliarMonitor"){ //procura o monitor com o pedido.user.id e soma os pontos
         resposta.ok = false;
-
+        resposta.msg = "Monitor não encontrado.";
+//TO DO fazer a logica da parte onde o aluno pode ou n avaliar o monitor (talvez essa parte fique no pesquisar e já volta se pode ou n avaliar la)
         if(checker([
             pedido.user, {},
             pedido.user.id, 1,
@@ -22,23 +23,23 @@ http.createServer(function (req, res) {
             pedido.user.pontosEmpatia, 1,
             pedido.user.pontosPontualidade, 1]))
         {
-            console.log("problema\n"+pedido);
             responder(res, resposta);
             return;            
         }
 
         for(var i = 0; i < rudeDB.user.length; i++){
             if(pedido.user.id == rudeDB.user[i].id){
-                rudeDB.user[i].pontosDominio += parseInt(pedido.user.pontosDominio);
-                rudeDB.user[i].pontosEmpatia += parseInt(pedido.user.pontosEmpatia);
-                rudeDB.user[i].pontosPontualidade += parseInt(pedido.user.pontosPontualidade);
+                rudeDB.user[i].pontosDominio += pedido.user.pontosDominio;
+                rudeDB.user[i].pontosEmpatia += pedido.user.pontosEmpatia;
+                rudeDB.user[i].pontosPontualidade += pedido.user.pontosPontualidade;
                 resposta.ok = true;
+                resposta.msg = "Monitor avaliado com sucesso!";
             }
         }
     }
     else if(pedido.tipo === "criarConta"){//procura para ver se ja n existe uma conta igual e cria se n existir
-        var criar = true;
         resposta.ok = true;
+        resposta.msg = "Confirme sua conta no email!";
 
         if(checker([//validar algumas variaveis recebidas
             pedido.user, {},
@@ -51,20 +52,18 @@ http.createServer(function (req, res) {
             pedido.user.monitor, true]))
         {
             resposta.ok = false;
-            console.log("problema");
-            console.log(pedido);
             responder(res, resposta);
             return;            
         }
 
         for(var i = 0; i < rudeDB.user.length; i++){//verificar se já existem alguem com o msm email
             if(pedido.user.email === rudeDB.user[i].email){
-                criar = false;
                 resposta.ok = false;
+                resposta.msg = "Esse email já foi cadastrado.";
                 break;
             }
         }
-        if(criar){
+        if(resposta.ok){
            /* var index = rudeDB.user.length;
             rudeDB.user[index] = {};
             rudeDB.user[index] = pedido.user;
@@ -81,29 +80,20 @@ http.createServer(function (req, res) {
                 html: '<h1>Seja bem-vindo ao Moni</h1> <p>Clique no link a baixo para confirmar seu email <br> <a href="http://192.168.0.104:8010/' + encodeURIComponent(JSON.stringify({tipo:'confirmacao', chave: rudeDB.userNaoAutenticado[index].chave})) + '">Confirmar Email</a></p>' //pode ser html no lugar de text dai só colocar um '<h1>hello world</h1> da vida
             };
             sendMail(nodemailer, conteudo);
-
         }
     }
     else if(pedido.tipo === "editarPerfil"){//edita o perfil das informações alteradas
         resposta.ok = false;
+        resposta.msg = "ID não encontrado.";
+
         if(checker([//validar algumas variaveis recebidas
-            pedido.user, {},
-            pedido.user.nomeCompleto, " ",
-            pedido.user.email, " ",
-            pedido.user.senha, " ",
-            pedido.user.curso, " ",
-            pedido.user.semestre, 1,
-            pedido.user.monitor, true,]))
+            pedido.user, {}]))
         {
             resposta.ok = false;
-            console.log("problema\n"+pedido);
             responder(res, resposta);
             return;            
         }
-        if(!pedido.user){
-            responder(res, resposta);
-            return;
-        }
+
         for(var i = 0; i < rudeDB.user.length; i++){
             if(pedido.user.id === rudeDB.user[i].id){
                 rudeDB.user[i].senha = pedido.senha || rudeDB.user[i].senha;
@@ -116,13 +106,13 @@ http.createServer(function (req, res) {
                 rudeDB.user[i].disciplina = pedido.disciplina || rudeDB.user[i].disciplina;
                 rudeDB.user[i].diaSemana = pedido.diaSemana || rudeDB.user[i].diaSemana;
                 rudeDB.user[i].horario = pedido.horario || rudeDB.user[i].horario;
-
+               
+                resposta.msg = "Atualizado com sucesso!";
                 resposta.ok = true;
                 reposta.user = rudeDB.user[i];
+                break;
             }
         }
-        responder(res, resposta);
-        return;
     }
     else if(pedido.tipo === "login"){//verifica se senha e login existem
         resposta.existe = false;

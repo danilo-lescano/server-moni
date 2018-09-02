@@ -25,7 +25,7 @@ module.exports = checker = function (data){ //checkar as variaveis que recebe do
         if( typeof data[i] !== undefined &&
             (typeof data[i] === typeof data[i+1] || typeof data[i] === typeof (isNaN(data[i+1]) ? " ": 1) ) )
             continue;
-        console.log(i);
+        console.log("Erro param: " + i);
         return true; //algo deu errado
     }
     return false; //tudo certo
