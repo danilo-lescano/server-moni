@@ -196,6 +196,7 @@ http.createServer(function (req, res) {
                 rudeDB.user[index].id = index;
                 console.log("deu certo");
                 console.log(rudeDB.user[index]);
+                rudeDB.userNaoAutenticado.splice(i,1);
                 h1 = "<h1>MONI</h1><h2>Email confirmado com sucesso!</h2>";
             }
         }
