@@ -2,7 +2,6 @@ var http = require('http');
 var url = require('url');
 var fs = require('fs');
 var nodemailer = require('nodemailer');
-var crypto = require('crypto');
 
 require('./myModule');
 
@@ -73,12 +72,13 @@ http.createServer(function (req, res) {
             var index = rudeDB.user.length;
             rudeDB.userNaoAutenticado[index] = {};
             rudeDB.userNaoAutenticado[index].user = pedido.user;
-            rudeDB.userNaoAutenticado[index].chave = gerarChave(crypto);
+            rudeDB.userNaoAutenticado[index].chave = gerarChave();
             var conteudo = {
                 to: "nq3i4fsx@hotmail.com",//pedido.user.email,
                 subject: 'MONI: confimarção de email!',
-                html: '<h1>Seja bem-vindo ao Moni</h1> <p>Clique no link a baixo para confirmar seu email <br> <a href="http://192.168.0.104:8010/' + encodeURIComponent(JSON.stringify({tipo:'confirmacao', chave: rudeDB.userNaoAutenticado[index].chave})) + '">Confirmar Email</a></p>' //pode ser html no lugar de text dai só colocar um '<h1>hello world</h1> da vida
+                html: '<h1>Seja bem-vindo ao Moni</h1> <p>Clique no link a baixo para confirmar seu email <br> <a href="http://localhost:8010/' + encodeURIComponent(JSON.stringify({tipo:'confirmacao', chave: rudeDB.userNaoAutenticado[index].chave})) + '">Confirmar Email</a></p>' //pode ser html no lugar de text dai só colocar um '<h1>hello world</h1> da vida
             };
+            console.log('http://localhost:8010/' + encodeURIComponent(JSON.stringify({tipo:'confirmacao', chave: rudeDB.userNaoAutenticado[index].chave})));
             sendMail(nodemailer, conteudo);
         }
     }
@@ -123,59 +123,56 @@ http.createServer(function (req, res) {
         for(var i = 0; i < rudeDB.user.length; i++){
             if(pedido.user.email === rudeDB.user[i].email && pedido.user.senha === rudeDB.user[i].senha){
                 resposta.existe = true;
-                resposta.user = rudeDB.user[i];
+                resposta.user = JSON.parse(JSON.stringify(rudeDB.user[i]));
                 resposta.user.senha = "";
-                responder(res, resposta);
-                return;
+                break;
             }
         }
     }
     else if(pedido.tipo === "pesquisar"){//devolve array com os monitores da disciplina X
-        console.log(pedido);
-        resposta = [];
-        if(!pedido.disciplina && pedido.semestre){
+        resposta.length = 0;
+        if(!pedido.disciplina || isNaN(pedido.semestre)){
+            console.log("entrou no primeiro if");
             responder(res, resposta);
             return;
         }
         for(var i = 0; i < rudeDB.user.length; i++){
             if(pedido.disciplina === rudeDB.user[i].disciplina && rudeDB.user[i].monitor && rudeDB.user[i].semestre > pedido.semestre){
-                var index = resposta.length;
-                resposta[index] = rudeDB.user[i];
+                var index = resposta.length++;
+                resposta[index] = JSON.parse(JSON.stringify(rudeDB.user[i]));
                 resposta[index].senha = "";
             }
         }
-        responder(res, resposta);
-        return;
     }
     else if(pedido.tipo === "registrarMonitoria"){
-        console.log(pedido);
         var index = rudeDB.monitoria.length;
         rudeDB.monitoria[index] = {};
         rudeDB.monitoria[index] = pedido.monitoria;
         rudeDB.monitoria[index].id = index;
 
         resposta.ok = true;
-        responder(res, resposta);
-        return;
     }
     else if(pedido.tipo === "verMonitoria"){
-        console.log(pedido);
-        resposta = [];
+        resposta.length = 0;
         if(!pedido.id){
             responder(res, resposta);
             return;
         }
         for(var i = 0; i < rudeDB.monitoria.length; i++){
             if(pedido.id === rudeDB.monitoria[i].monitorid){
-                var index = resposta.length;
+                var index = resposta.length++;
                 resposta[index] = rudeDB.monitoria[i];
             }
         }
-        responder(res, resposta);
-        return;
     }
     else if(pedido.tipo === "enviarEmail"){
-
+        var conteudo = {
+            to: pedido.monitoria.emailprof,
+            subject: 'MONI: registros de monitoria',
+            html: pedido.monitoria.corpo
+        };
+        sendMail(nodemailer, conteudo);
+        resposta.ok = true;
     }
     else if(pedido.tipo === "confirmacao"){
         var h1 = "<h1>Link zuado</h1>";

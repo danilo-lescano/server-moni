@@ -1,7 +1,6 @@
 module.exports = rudeDB = {};
 module.exports = tabelas = {};
 module.exports = responder = function (requestListener, dados){
-    if(dados.senha) dados.senha = "";
     requestListener.writeHead(200, {'Content-Type': 'text/html'});
     requestListener.write(JSON.stringify(dados));
     requestListener.end();
@@ -30,7 +29,7 @@ module.exports = checker = function (data){ //checkar as variaveis que recebe do
     }
     return false; //tudo certo
 };
-module.exports = gerarChave = function (crypto){
+module.exports = gerarChave = function (){
     var key = '';
     for(var i = 0; i < 5; i++)
         key+=Math.floor(Math.random()*16777215).toString(16);
